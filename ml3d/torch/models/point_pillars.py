@@ -380,9 +380,23 @@ class PointPillarsVoxelization(torch.nn.Module):
             max_voxels = self.max_voxels[1]
 
         points = points_feats[:, :3]
-
-        ans = voxelize(points, self.voxel_size, self.points_range_min,
-                       self.points_range_max, self.max_num_points, max_voxels)
+        num_voxels = ((self.points_range_max - self.points_range_min) /
+                      self.voxel_size).type(torch.int32)
+        # x_max = self.points_range_max[0]
+        # y_min = self.points_range_min[1]
+        # y_max = self.points_range_max[1]
+        # if (points[0] > x_max).any():
+        #     print("X too big!", x_max)
+        # if (points[1] < y_min).any():
+        #     print("Y too small!", y_min, points[1][points[1] < y_min])
+        # if (points[1] > y_max).any():
+        #     print("Y too large! ", y_max, points[1][points[1] > y_max])
+        ans = voxelize(points=points,
+                       voxel_size=self.voxel_size,
+                       points_range_min=self.points_range_min,
+                       points_range_max=self.points_range_max,
+                       max_points_per_voxel=self.max_num_points,
+                       max_voxels=max_voxels)
 
         # prepend row with zeros which maps to index 0 which maps to void points.
         feats = torch.cat(
@@ -397,6 +411,14 @@ class PointPillarsVoxelization(torch.nn.Module):
         out_coords = ans.voxel_coords[:, [2, 1, 0]].contiguous()
         out_num_points = ans.voxel_point_row_splits[
             1:] - ans.voxel_point_row_splits[:-1]
+
+        in_bounds_y = out_coords[:, 1] < num_voxels[1]
+        in_bounds_x = out_coords[:, 2] < num_voxels[0]
+        in_bounds = torch.logical_and(in_bounds_x, in_bounds_y)
+
+        out_coords = out_coords[in_bounds]
+        out_voxels = out_voxels[in_bounds]
+        out_num_points = out_num_points[in_bounds]
 
         return out_voxels, out_coords, out_num_points
 

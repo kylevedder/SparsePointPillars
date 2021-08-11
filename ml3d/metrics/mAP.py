@@ -219,15 +219,16 @@ def mAP(pred,
                 gt_cnt[i, j] += len(filter_data(t, [c], [d])[1])
 
     detection = np.zeros((len(classes), len(difficulties), box_cnts[-1], 3))
-    false_negatives = np.zeros((len(classes), len(difficulties), 1), dtype='int64')
+    false_negatives = np.zeros((len(classes), len(difficulties), 1),
+                               dtype='int64')
     for i in range(len(pred)):
         det, false_negative = precision_3d(pred=pred[i],
-                            target=target[i],
-                            classes=classes,
-                            difficulties=difficulties,
-                            min_overlap=min_overlap,
-                            bev=bev,
-                            similar_classes=similar_classes)
+                                           target=target[i],
+                                           classes=classes,
+                                           difficulties=difficulties,
+                                           min_overlap=min_overlap,
+                                           bev=bev,
+                                           similar_classes=similar_classes)
         detection[:, :, box_cnts[i]:box_cnts[i + 1]] = det
         false_negatives += false_negative
 

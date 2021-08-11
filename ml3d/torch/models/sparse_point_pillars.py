@@ -79,7 +79,7 @@ class SparsePointPillars(PointPillars):
         super().__init__(name=name,
                          device=device,
                          point_cloud_range=point_cloud_range,
-                         classes=classes, 
+                         classes=classes,
                          voxelize=voxelize,
                          voxel_encoder=voxel_encoder,
                          scatter=scatter,
@@ -96,6 +96,7 @@ class SparsePointPillars(PointPillars):
 
 
 MODEL._register_module(SparsePointPillars, 'torch')
+
 
 class SparsePointPillarsScatter(nn.Module):
     """Sparse Point Pillar's Scatter.
@@ -125,12 +126,15 @@ class SparsePointPillarsScatter(nn.Module):
                 The first column indicates the sample ID.
             batch_size (int): Number of samples in the current batch.
         """
-        sparse_coords = coors[:, [0,2,3]]
+        sparse_coords = coors[:, [0, 2, 3]]
+        # assert (out_coords[:1] < num_voxels[0]).all()
+        # assert (out_coords[:2] < num_voxels[1]).all()
         # print(sparse_coords.shape)
         # print(voxel_features.shape)
         out_shape = (batch_size, self.ny, self.nx, voxel_features.shape[1])
         # print(out_shape)
-        sp_batch = torch.sparse_coo_tensor(sparse_coords.t(), voxel_features, out_shape)
+        sp_batch = torch.sparse_coo_tensor(sparse_coords.t(), voxel_features,
+                                           out_shape)
         return sp_batch
 
 
@@ -158,23 +162,25 @@ class SparseSECOND(nn.Module):
         for i, layer_num in enumerate(layer_nums):
             block = [
                 ME.MinkowskiConvolution(in_filters[i],
-                          out_channels[i],
-                          3,
-                          bias=False,
-                          stride=layer_strides[i], 
-                          dimension=2),
+                                        out_channels[i],
+                                        3,
+                                        bias=False,
+                                        stride=layer_strides[i],
+                                        dimension=2),
                 ME.MinkowskiBatchNorm(out_channels[i], eps=1e-3, momentum=0.01),
                 ME.MinkowskiReLU(inplace=True),
             ]
             for j in range(layer_num):
                 block.append(
                     ME.MinkowskiConvolution(out_channels[i],
-                              out_channels[i],
-                              3,
-                              bias=False,
-                              dimension=2))
+                                            out_channels[i],
+                                            3,
+                                            bias=False,
+                                            dimension=2))
                 block.append(
-                    ME.MinkowskiBatchNorm(out_channels[i], eps=1e-3, momentum=0.01))
+                    ME.MinkowskiBatchNorm(out_channels[i],
+                                          eps=1e-3,
+                                          momentum=0.01))
                 block.append(ME.MinkowskiReLU(inplace=True))
 
             block = nn.Sequential(*block)
@@ -204,15 +210,20 @@ class SparseSECOND(nn.Module):
 
 
 class ToDenseMink(nn.Module):
-    def __init__(self, input_shape, first_shrink_stride, first_upsample_stride, out_size):
+
+    def __init__(self, input_shape, first_shrink_stride, first_upsample_stride,
+                 out_size):
         super(ToDenseMink, self).__init__()
         batch_size, x_size, y_size, _ = input_shape
         scale = first_shrink_stride // first_upsample_stride
-        self.output_shape = torch.Size([batch_size, out_size, x_size // scale, y_size // scale])
+        self.output_shape = torch.Size(
+            [batch_size, out_size, x_size // scale, y_size // scale])
         self.min_coord = torch.IntTensor([0, 0])
-    
+
     def forward(self, x):
-        return x.dense(shape=self.output_shape, min_coordinate=self.min_coord)[0]
+        return x.dense(shape=self.output_shape,
+                       min_coordinate=self.min_coord)[0]
+
 
 class SparseSECONDFPN(nn.Module):
     """FPN used in SECOND/PointPillars/PartA2/MVXNet.
@@ -245,16 +256,17 @@ class SparseSECONDFPN(nn.Module):
                     out_channels=out_channel,
                     kernel_size=upsample_strides[i],
                     stride=upsample_strides[i],
-                    bias=False, 
+                    bias=False,
                     dimension=2)
             else:
                 stride = np.round(1 / stride).astype(np.int64)
-                upsample_layer = ME.MinkowskiConvolution(in_channels=in_channels[i],
-                                           out_channels=out_channel,
-                                           kernel_size=stride,
-                                           stride=stride,
-                                           bias=False, 
-                                           dimension=2)
+                upsample_layer = ME.MinkowskiConvolution(
+                    in_channels=in_channels[i],
+                    out_channels=out_channel,
+                    kernel_size=stride,
+                    stride=stride,
+                    bias=False,
+                    dimension=2)
 
             deblock = nn.Sequential(
                 upsample_layer,
@@ -282,16 +294,17 @@ class SparseSECONDFPN(nn.Module):
         """
         input_shape, layer_strides, x = x
         assert len(x) == len(self.in_channels)
-        ups = [ToDenseMink(input_shape, 
-                           layer_strides[0], 
-                           self.upsample_strides[0], 
-                           self.out_channels[i])(deblock(x[i]))
-            for i, deblock in enumerate(self.deblocks)]
+        ups = [
+            ToDenseMink(input_shape, layer_strides[0], self.upsample_strides[0],
+                        self.out_channels[i])(deblock(x[i]))
+            for i, deblock in enumerate(self.deblocks)
+        ]
         if len(ups) > 1:
             out = torch.cat(ups, dim=1)
         else:
             out = ups[0]
         return out
+
 
 # class SparseAnchor3DHead(Anchor3DHead):
 
@@ -317,7 +330,7 @@ class SparseSECONDFPN(nn.Module):
 #                          sizes=sizes,
 #                          rotations=rotations,
 #                          iou_thr=iou_thr)
-        
+
 #         self.conv_cls = ME.MinkowskiConvolution(self.feat_channels, self.cls_out_channels, 1, dimension=2)
 #         self.conv_reg = ME.MinkowskiConvolution(self.feat_channels,
 #                                   self.num_anchors * self.box_code_size, 1, dimension=2)
@@ -325,4 +338,3 @@ class SparseSECONDFPN(nn.Module):
 #                                       1, dimension=2)
 
 #         self.init_weights()
-

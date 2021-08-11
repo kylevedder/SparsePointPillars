@@ -7,4 +7,7 @@ from .sparse_point_pillars import SparsePointPillars
 from .sparseconvnet import SparseConvUnet
 from .point_rcnn import PointRCNN
 
-__all__ = ['RandLANet', 'KPFCNN', 'PointPillars', 'PointRCNN', 'SparseConvUnet', 'SparsePointPillars']
+__all__ = [
+    'RandLANet', 'KPFCNN', 'PointPillars', 'PointRCNN', 'SparseConvUnet',
+    'SparsePointPillars'
+]

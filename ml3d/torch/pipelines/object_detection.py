@@ -317,7 +317,7 @@ class ObjectDetection(BasePipeline):
 
             # --------------------- validation
             save_validation = False
-            if cfg.validation_freq is None or epoch % cfg.validation_freq == 0:
+            if (not hasattr(cfg, 'validation_freq')) or (epoch % cfg.validation_freq == 0):
                 save_validation = True
                 self.run_valid()
 

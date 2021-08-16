@@ -29,6 +29,9 @@ RUN python -c "import open3d as o3d"
 RUN pip install https://github.com/isl-org/open3d_downloads/releases/download/torch1.7.1/torch-1.7.1-cp38-cp38-linux_x86_64.whl
 RUN python -c "import torch; print(torch.__version__)"
 RUN conda install tensorboard matplotlib
+ENV TORCH_CUDA_ARCH_LIST="Ampere"
+RUN pip install -U git+https://github.com/NVIDIA/MinkowskiEngine --install-option="--force_cuda" --install-option="--blas=openblas" -v --no-deps
 
-ENV OPEN3D_ML_ROOT /Open3D-ML
-WORKDIR /Open3D-ML
+
+ENV OPEN3D_ML_ROOT /project
+WORKDIR /project

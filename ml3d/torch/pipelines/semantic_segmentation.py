@@ -380,6 +380,7 @@ class SemanticSegmentation(BasePipeline):
         for epoch in range(0, cfg.max_epoch + 1):
 
             log.info(f'=== EPOCH {epoch:d}/{cfg.max_epoch:d} ===')
+            log.handlers[0].flush()
             model.train()
             self.metric_train.reset()
             self.metric_val.reset()

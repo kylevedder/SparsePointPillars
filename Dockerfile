@@ -31,7 +31,7 @@ RUN python -c "import torch; print(torch.__version__)"
 RUN conda install tensorboard matplotlib
 ENV TORCH_CUDA_ARCH_LIST="Ampere"
 RUN pip install -U git+https://github.com/NVIDIA/MinkowskiEngine --install-option="--force_cuda" --install-option="--blas=openblas" -v --no-deps
-
+RUN pip install pyntcloud
 
 ENV OPEN3D_ML_ROOT /project
 WORKDIR /project

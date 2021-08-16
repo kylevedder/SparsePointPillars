@@ -2,7 +2,6 @@
 srun --gpus=1\
  --mem-per-gpu=32G\
  --cpus-per-gpu=16\
- -w node-3090-1\
  --qos=eaton-high\
  --time=72:10:00\
  --partition=eaton-compute \

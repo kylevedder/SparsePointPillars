@@ -3,6 +3,7 @@ import logging
 from tqdm import tqdm
 import numpy as np
 import re
+import time
 
 from datetime import datetime
 
@@ -120,11 +121,74 @@ class ObjectDetection(BasePipeline):
         self.test_ious = []
 
         pred = []
+        gt = []
+        total_time = 0
+        to_device_time = 0
+        forward_time = 0
+        bbox_time = 0
+        total_elements = len(test_loader)
         with torch.no_grad():
             for data in tqdm(test_loader, desc='testing'):
-                results = self.run_inference(data)
-                pred.extend(results)
-                dataset.save_test_result(results, data.attr)
+                to_device_start = time.time()
+                data.to(device)
+                to_device_end = time.time()
+                to_device_delta = (to_device_end - to_device_start)
+                forward_start = time.time()
+                results = model(data)
+                forward_end = time.time()
+                forward_delta = (forward_end - forward_start)
+                bbox_start = time.time()
+                # convert to bboxes for mAP evaluation
+                boxes = model.inference_end(results, data)
+                bbox_end = time.time()
+                bbox_delta = (bbox_end - bbox_start)
+                total_time += (to_device_delta + forward_delta + bbox_delta)
+                to_device_time += to_device_delta
+                forward_time += forward_delta
+                bbox_time += forward_delta
+                pred.extend([BEVBox3D.to_dicts(b) for b in boxes])
+                gt.extend([BEVBox3D.to_dicts(b) for b in data.bbox_objs])
+
+        overlaps = cfg.get("overlaps", [0.5])
+        similar_classes = cfg.get("similar_classes", {})
+        difficulties = cfg.get("difficulties", [0])
+
+        print(f"Mean total time: {total_time / total_elements * 1000} milliseconds")
+        print(f"Mean to device time: {to_device_time / total_elements * 1000} milliseconds")
+        print(f"Mean forward time: {forward_time / total_elements * 1000} milliseconds")
+        print(f"Mean bbox time: {bbox_time / total_elements * 1000} milliseconds")
+
+        ap = mAP(pred,
+                 gt,
+                 model.classes,
+                 difficulties,
+                 overlaps,
+                 similar_classes=similar_classes)
+
+        log.info("")
+        log.info("=============== mAP BEV ===============")
+        log.info(("class \\ difficulty  " +
+                  "{:>5} " * len(difficulties)).format(*difficulties))
+        for i, c in enumerate(model.classes):
+            log.info(("{:<20} " + "{:>5.2f} " * len(difficulties)).format(
+                c + ":", *ap[i, :, 0]))
+        log.info("Overall: {:.2f}".format(np.mean(ap[:, -1])))
+
+        ap = mAP(pred,
+                 gt,
+                 model.classes,
+                 difficulties,
+                 overlaps,
+                 similar_classes=similar_classes,
+                 bev=False)
+        log.info("")
+        log.info("=============== mAP  3D ===============")
+        log.info(("class \\ difficulty  " +
+                  "{:>5} " * len(difficulties)).format(*difficulties))
+        for i, c in enumerate(model.classes):
+            log.info(("{:<20} " + "{:>5.2f} " * len(difficulties)).format(
+                c + ":", *ap[i, :, 0]))
+        log.info("Overall: {:.2f}".format(np.mean(ap[:, -1])))
 
     def run_valid(self):
         """Run validation with validation data split, computes mean average

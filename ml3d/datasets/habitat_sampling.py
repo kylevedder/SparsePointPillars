@@ -78,7 +78,7 @@ class HabitatSampling(BaseDataset):
                 self.val_files.append(f)
 
         self.test_files = glob(
-            join(cfg.dataset_path, 'testing', 'pc', '*.bin'))
+            join(cfg.dataset_path, 'test', 'pc', '*.bin'))
         self.test_files.sort()
 
     @staticmethod
@@ -192,14 +192,7 @@ class HabitatSampling(BaseDataset):
             attrs: The attributes that correspond to the outputs passed in
             results.
         """
-        make_dir(self.cfg.test_result_folder)
-        for attr, res in zip(attrs, results):
-            name = attr['name']
-            path = join(self.cfg.test_result_folder, name + '.txt')
-            f = open(path, 'w')
-            for box in res:
-                f.write(box.to_kitti_format(box.confidence))
-                f.write('\n')
+        pass
 
 
 def save_pc(pc, filename):

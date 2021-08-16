@@ -224,8 +224,8 @@ class PointPillars(BaseModel):
 
         new_data = {'point': data['point'], 'calib': data['calib']}
 
-        if attr['split'] not in ['test', 'testing']:
-            new_data['bbox_objs'] = data['bounding_boxes']
+        # if attr['split'] not in ['test', 'testing']:
+        new_data['bbox_objs'] = data['bounding_boxes']
 
         if 'full_point' in data:
             points = np.array(data['full_point'][:, 0:4], dtype=np.float32)
@@ -286,15 +286,14 @@ class PointPillars(BaseModel):
     def transform(self, data, attr):
         t_data = {'point': data['point'], 'calib': data['calib']}
 
-        if attr['split'] not in ['test', 'testing']:
-            t_data['bbox_objs'] = data['bbox_objs']
-            t_data['labels'] = np.array([
-                self.name2lbl.get(bb.label_class, len(self.classes))
-                for bb in data['bbox_objs']
-            ],
-                                        dtype=np.int64)
-            t_data['bboxes'] = np.array(
-                [bb.to_xyzwhlr() for bb in data['bbox_objs']], dtype=np.float32)
+        t_data['bbox_objs'] = data['bbox_objs']
+        t_data['labels'] = np.array([
+            self.name2lbl.get(bb.label_class, len(self.classes))
+            for bb in data['bbox_objs']
+        ],
+                                    dtype=np.int64)
+        t_data['bboxes'] = np.array(
+            [bb.to_xyzwhlr() for bb in data['bbox_objs']], dtype=np.float32)
 
         return t_data
 

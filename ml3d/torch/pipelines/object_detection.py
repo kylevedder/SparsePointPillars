@@ -145,7 +145,7 @@ class ObjectDetection(BasePipeline):
                 total_time += (to_device_delta + forward_delta + bbox_delta)
                 to_device_time += to_device_delta
                 forward_time += forward_delta
-                bbox_time += forward_delta
+                bbox_time += bbox_delta
                 pred.extend([BEVBox3D.to_dicts(b) for b in boxes])
                 gt.extend([BEVBox3D.to_dicts(b) for b in data.bbox_objs])
 

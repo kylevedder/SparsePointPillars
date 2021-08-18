@@ -1,0 +1,56 @@
+FROM nvcr.io/nvidia/l4t-pytorch:r32.6.1-pth1.9-py3
+SHELL ["/bin/bash", "-c"]
+RUN git clone --recursive https://github.com/intel-isl/Open3D
+WORKDIR Open3D
+RUN apt update
+RUN apt install apt-utils
+RUN SUDO=" " util/install_deps_ubuntu.sh assume-yes
+
+RUN apt update --fix-missing
+RUN apt install -y software-properties-common wget curl gpg gcc git make libssl-dev
+
+# Install miniconda to /miniconda
+#RUN curl -LO http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-aarch64.sh
+#RUN bash Miniconda3-latest-Linux-aarch64.sh -p /miniconda -b
+#RUN rm Miniconda3-latest-Linux-aarch64.sh
+#ENV PATH=/miniconda/bin:${PATH}
+#RUN conda update -y conda
+
+#RUN conda install cmake
+
+# Install CMake
+RUN apt purge -y --auto-remove cmake
+RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
+RUN apt-add-repository 'deb https://apt.kitware.com/ubuntu/ bionic main'
+RUN lsb_release -a
+RUN apt update
+RUN apt install -y cmake locate
+
+RUN mkdir build
+WORKDIR build
+RUN ls
+RUN ln -s /usr/local/cuda/targets/aarch64-linux/lib /usr/local/cuda/targets/aarch64-linux/lib64
+#RUN ls /usr/local/cuda/targets/aarch64-linux/lib64
+#RUN locate libcudart.so
+RUN which nvcc
+RUN nvcc --version
+RUN cmake\
+ -DBUILD_GUI=OFF\
+ -DBUILD_UNIT_TESTS=OFF\
+ =DCMAKE_BUILD_TYPE=Release\
+ ..
+# -DBUILD_CUDA_MODULE=OFF\
+# -DBUILD_TENSORFLOW_OPS=OFF\
+# -DBUILD_PYTORCH_OPS=ON\
+
+RUN make -j`nproc`
+RUN make install
+RUN make install-pip-package
+ENV LD_LIBRARY_PATH /usr/local/cuda/lib64 ${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
+#RUN python3 -c "import torch; print(torch.__version__)"
+#RUN python3 -c "import open3d; print(open3d.__version__)"
+
+ENV TORCH_CUDA_ARCH_LIST="Turing"
+#RUN cat ~/.bashrc
+RUN pip3 install -U git+https://github.com/NVIDIA/MinkowskiEngine --install-option="--force_cuda" --install-option="--blas=openblas" -v --no-deps
+

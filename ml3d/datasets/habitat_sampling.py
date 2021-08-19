@@ -32,7 +32,7 @@ class HabitatSampling(BaseDataset):
                  name='HabitatSampling',
                  cache_dir='./logs/cache',
                  use_cache=False,
-                 val_split=3750,
+                 val_split=15000,
                  test_result_folder='./test',
                  **kwargs):
         """Initialize the function by passing the dataset and other details.

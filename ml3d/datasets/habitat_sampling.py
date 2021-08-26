@@ -10,6 +10,7 @@ import logging
 import yaml
 import joblib
 import time
+import random
 
 from .base_dataset import BaseDataset, BaseDatasetSplit
 from ..utils import Config, make_dir, DATASET
@@ -32,7 +33,7 @@ class HabitatSampling(BaseDataset):
                  name='HabitatSampling',
                  cache_dir='./logs/cache',
                  use_cache=False,
-                 val_split=15000,
+                 val_split=5000,
                  test_result_folder='./test',
                  **kwargs):
         """Initialize the function by passing the dataset and other details.
@@ -67,6 +68,10 @@ class HabitatSampling(BaseDataset):
         self.all_files = glob(
             join(cfg.dataset_path, 'training', 'pc', '*.bin'))
         self.all_files.sort()
+        # Ensures that the training and validation regions 
+        # of the dataset are not uniform distinct regions of index,
+        # while still being deterministic
+        random.Random(0).shuffle(self.all_files)
         self.train_files = []
         self.val_files = []
 

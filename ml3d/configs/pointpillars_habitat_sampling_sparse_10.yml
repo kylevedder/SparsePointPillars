@@ -82,12 +82,12 @@ pipeline:
   save_ckpt_freq: 2
   validation_freq: 5
   max_epoch: 800
-  main_log_dir: ./logs
-  train_sum_dir: train_log
+  main_log_dir: ./logs_sparse_10
+  train_sum_dir: train_log_sparse_10
   grad_clip_norm: 2
 
   optimizer:
-    lr: 0.003
+    lr: 0.01
     betas: [0.95, 0.99]
     weight_decay: 0.01
 

@@ -305,6 +305,19 @@ class SparseSECONDFPN(nn.Module):
             out = ups[0]
         return out
 
+# class HeadToDenseMink(nn.Module):
+
+#     def __init__(self, out_channels):
+#         super(HeadToDenseMink, self).__init__()
+#         self.out_channels = out_channels
+#         self.min_coord = torch.zeros((2, ), dtype=torch.int)
+
+#     def forward(self, input_pseudo_img_shape, output_scale, x):
+#         batch_size, x_in, y_in, _ = input_pseudo_img_shape
+#         s = torch.Size([batch_size, self.out_channels, x_in // output_scale, y_in // output_scale])
+#         return x.dense(shape=s,
+#                        min_coordinate=self.min_coord)[0]
+
 
 # class SparseAnchor3DHead(Anchor3DHead):
 
@@ -330,11 +343,29 @@ class SparseSECONDFPN(nn.Module):
 #                          sizes=sizes,
 #                          rotations=rotations,
 #                          iou_thr=iou_thr)
-
-#         self.conv_cls = ME.MinkowskiConvolution(self.feat_channels, self.cls_out_channels, 1, dimension=2)
+#         self.cls_to_dense = HeadToDenseMink(self.cls_out_channels)
+#         self.reg_to_dense = HeadToDenseMink(self.num_anchors * self.box_code_size)
+#         self.dir_to_dense = HeadToDenseMink(self.num_anchors * 2)
+#         self.conv_cls = ME.MinkowskiConvolution(self.feat_channels, self.cls_out_channels, 1, dimension=2, expand_coordinates=True)
 #         self.conv_reg = ME.MinkowskiConvolution(self.feat_channels,
-#                                   self.num_anchors * self.box_code_size, 1, dimension=2)
+#                                   self.num_anchors * self.box_code_size, 1, dimension=2, expand_coordinates=True)
 #         self.conv_dir_cls = ME.MinkowskiConvolution(self.feat_channels, self.num_anchors * 2,
-#                                       1, dimension=2)
+#                                       1, dimension=2, expand_coordinates=True)                                      
 
-#         self.init_weights()
+#         # self.init_weights()
+
+#     def forward(self, x):
+#         """Forward function on a feature map.
+
+#         Args:
+#             x (batch_size, torch.Tensor): Input features.
+
+#         Returns:
+#             tuple[torch.Tensor]: Contain score of each class, bbox \
+#                 regression and direction classification predictions.
+#         """
+#         input_pseudo_img_shape, output_scale, x = x
+#         cls_score = self.cls_to_dense(input_pseudo_img_shape, output_scale, self.conv_cls(x))
+#         bbox_pred = self.reg_to_dense(input_pseudo_img_shape, output_scale, self.conv_reg(x))
+#         dir_cls_preds = self.cls_to_dense(input_pseudo_img_shape, output_scale, self.conv_dir_cls(x))
+#         return cls_score, bbox_pred, dir_cls_preds

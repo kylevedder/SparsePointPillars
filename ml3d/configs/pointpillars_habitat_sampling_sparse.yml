@@ -87,7 +87,7 @@ pipeline:
   grad_clip_norm: 2
 
   optimizer:
-    lr: 0.003
+    lr: 0.001
     betas: [0.95, 0.99]
     weight_decay: 0.01
 

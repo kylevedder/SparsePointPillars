@@ -163,10 +163,11 @@ class SparseSECOND(nn.Module):
             block = [
                 ME.MinkowskiConvolution(in_filters[i],
                                         out_channels[i],
-                                        3,
+                                        2,
                                         bias=False,
                                         stride=layer_strides[i],
-                                        dimension=2),
+                                        dimension=2,
+                                        expand_coordinates=True),
                 ME.MinkowskiBatchNorm(out_channels[i], eps=1e-3, momentum=0.01),
                 ME.MinkowskiReLU(inplace=True),
             ]

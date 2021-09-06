@@ -1,0 +1,98 @@
+dataset:
+  name: HabitatSampling
+  dataset_path: # path/to/your/dataset
+  cache_dir: ./logs/cache
+  steps_per_epoch_train: 5000
+
+model:
+  name: SparsePointPillars
+  ckpt_path: # path/to/your/checkpoint
+
+  batcher: "ignore"
+
+  point_cloud_range: [0, -10.0, -2, 10, 10, 2]
+  classes: ['chair']
+
+  loss:
+    focal:
+      gamma: 2.0
+      alpha: 0.25
+      loss_weight: 1.0
+    smooth_l1:
+      beta: 0.11
+      loss_weight: 2.0
+    cross_entropy:
+      loss_weight: 0.2
+
+  voxelize:
+    max_num_points: 32
+    voxel_size: &vsize
+      [0.05, 0.05, 4]
+    max_voxels: [16000, 40000]
+  
+  voxel_encoder:
+    in_channels: 3
+    feat_channels: [64]
+    voxel_size: *vsize
+
+  scatter:
+    in_channels: 64
+    output_shape: [496, 432]
+
+  backbone:
+    in_channels: 64
+    out_channels: [64, 128, 256]
+    layer_nums: [3, 5, 5]
+    layer_strides: [2, 2, 2]
+
+  neck:
+    in_channels: [64, 128, 256]
+    out_channels: [128, 128, 128]
+    upsample_strides: [1, 2, 4]
+    use_conv_for_no_stride: false
+
+  head:
+    in_channels: 384
+    feat_channels: 384
+    nms_pre: 100
+    score_thr: 0.1
+    ranges: [
+      [0, -10.0, 0, 10, 10, 0]
+    ]
+    sizes: [[0.8, 0.8, 0.95]]
+    rotations: [0, 1.57]
+    iou_thr: [[0.35, 0.5]]
+  
+  augment:
+    PointShuffle: True
+    ObjectRangeFilter: True
+    ObjectSample:
+      min_points_dict:
+        chair: 10
+      sample_dict:
+        chair: 10
+
+
+pipeline:
+  name: ObjectDetection
+  test_compute_metric: true
+  batch_size: 6
+  val_batch_size: 1
+  test_batch_size: 1
+  save_ckpt_freq: 2
+  validation_freq: 5
+  max_epoch: 300
+  main_log_dir: ./logs_sparse_01_wd_4_2x2
+  train_sum_dir: train_log_sparse_01_wd_4_2x2
+  grad_clip_norm: 2
+
+  optimizer:
+    lr: 0.0001
+    betas: [0.95, 0.99]
+    weight_decay: 0.0025
+
+  # evaluation properties
+  overlaps: [0.5]
+  similar_classes: {}
+  difficulties: [0, 1, 2]
+    

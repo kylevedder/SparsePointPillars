@@ -37,7 +37,7 @@ model:
 
   scatter:
     in_channels: 64
-    output_shape: [496, 432]
+    output_shape: [504, 440]
 
   backbone:
     in_channels: 64
@@ -84,7 +84,7 @@ pipeline:
   val_batch_size: 1
   test_batch_size: 1
   save_ckpt_freq: 2
-  validation_freq: 2
+  validation_freq: 5
   max_epoch: 200
   main_log_dir: ./logs
   train_sum_dir: train_log

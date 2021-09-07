@@ -73,7 +73,7 @@ class ObjectDetection(BasePipeline):
         data.to(self.device)
 
         with torch.no_grad():
-            results = model(data)
+            _, _, _, _, results = model(data)
             boxes = model.inference_end(results, data)
 
         return boxes
@@ -124,7 +124,10 @@ class ObjectDetection(BasePipeline):
         gt = []
         total_time = 0
         to_device_time = 0
-        forward_time = 0
+        feat_extract_time = 0
+        feature_net_time = 0
+        backbone_time = 0
+        head_time = 0
         bbox_time = 0
         total_elements = len(test_loader)
         with torch.no_grad():
@@ -133,18 +136,18 @@ class ObjectDetection(BasePipeline):
                 data.to(device)
                 to_device_end = time.time()
                 to_device_delta = (to_device_end - to_device_start)
-                forward_start = time.time()
-                results = model(data)
-                forward_end = time.time()
-                forward_delta = (forward_end - forward_start)
+                feat_extract_delta, feature_net_delta, backbone_delta, head_delta, results = model(data)
                 bbox_start = time.time()
                 # convert to bboxes for mAP evaluation
                 boxes = model.inference_end(results, data)
                 bbox_end = time.time()
                 bbox_delta = (bbox_end - bbox_start)
-                total_time += (to_device_delta + forward_delta + bbox_delta)
+                total_time += (to_device_delta + feat_extract_delta + feature_net_delta + backbone_delta + head_delta + bbox_delta)
                 to_device_time += to_device_delta
-                forward_time += forward_delta
+                feat_extract_time += feat_extract_delta
+                feature_net_time += feature_net_delta
+                backbone_time += backbone_delta
+                head_time += head_delta
                 bbox_time += bbox_delta
                 pred.extend([BEVBox3D.to_dicts(b) for b in boxes])
                 gt.extend([BEVBox3D.to_dicts(b) for b in data.bbox_objs])
@@ -155,7 +158,10 @@ class ObjectDetection(BasePipeline):
 
         print(f"Mean total time: {total_time / total_elements * 1000} milliseconds")
         print(f"Mean to device time: {to_device_time / total_elements * 1000} milliseconds")
-        print(f"Mean forward time: {forward_time / total_elements * 1000} milliseconds")
+        print(f"Mean feat extract time: {feat_extract_time / total_elements * 1000} milliseconds")
+        print(f"Mean feat net time: {feature_net_time / total_elements * 1000} milliseconds")
+        print(f"Mean backbone time time: {backbone_time / total_elements * 1000} milliseconds")
+        print(f"Mean head time time: {head_time / total_elements * 1000} milliseconds")
         print(f"Mean bbox time: {bbox_time / total_elements * 1000} milliseconds")
 
         ap = mAP(pred,
@@ -236,7 +242,7 @@ class ObjectDetection(BasePipeline):
         with torch.no_grad():
             for data in tqdm(valid_loader, desc='validation'):
                 data.to(device)
-                results = model(data)
+                _, _, _, _, results = model(data)
                 loss = model.loss(results, data)
                 for l, v in loss.items():
                     if not l in self.valid_losses:
@@ -357,7 +363,7 @@ class ObjectDetection(BasePipeline):
             process_bar = tqdm(train_loader, desc='training')
             for idx, data in enumerate(process_bar):
                 data.to(device)
-                results = model(data)
+                _, _, _, _, results = model(data)
                 loss = model.loss(results, data)
                 loss_sum = sum(loss.values())
 

@@ -21,6 +21,7 @@
 
 import torch
 import pickle
+import time
 from torch import nn
 from torch.nn import functional as F
 from torch.nn.modules.utils import _pair
@@ -102,13 +103,20 @@ class PointPillars(BaseModel):
 
     def extract_feats(self, points):
         """Extract features from points."""
+        feat_extract_start = time.time()
         voxels, num_points, coors = self.voxelize(points)
         voxel_features = self.voxel_encoder(voxels, num_points, coors)
         batch_size = coors[-1, 0].item() + 1
+        feat_extract_end = time.time()
         x = self.middle_encoder(voxel_features, coors, batch_size)
+        feat_net_end = time.time()
         x = self.backbone(x)
         x = self.neck(x)
-        return x
+        backbone_end = time.time()
+        return (feat_extract_end -
+                feat_extract_start), (feat_net_end -
+                                      feat_extract_end), (backbone_end -
+                                                          feat_net_end), x
 
     @torch.no_grad()
     def voxelize(self, points):
@@ -130,9 +138,12 @@ class PointPillars(BaseModel):
 
     def forward(self, inputs):
         inputs = inputs.point
-        x = self.extract_feats(inputs)
+        feat_extract_delta, feature_net_delta, backbone_delta, x = self.extract_feats(
+            inputs)
+        head_start = time.time()
         outs = self.bbox_head(x)
-        return outs
+        head_end = time.time()
+        return feat_extract_delta, feature_net_delta, backbone_delta, head_end - head_start, outs
 
     def get_optimizer(self, cfg):
         optimizer = torch.optim.AdamW(self.parameters(), **cfg)

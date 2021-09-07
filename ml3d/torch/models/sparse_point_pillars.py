@@ -219,7 +219,7 @@ class ToDenseMink(nn.Module):
         scale = first_shrink_stride // first_upsample_stride
         self.output_shape = torch.Size(
             [batch_size, out_size, x_size // scale, y_size // scale])
-        self.min_coord = torch.IntTensor([0, 0])
+        self.min_coord = torch.zeros((2, ), dtype=torch.int)
 
     def forward(self, x):
         return x.dense(shape=self.output_shape,
@@ -294,17 +294,18 @@ class SparseSECONDFPN(nn.Module):
             torch.Tensor: Feature maps.
         """
         input_shape, layer_strides, x = x
-        assert len(x) == len(self.in_channels)
+        # assert len(x) == len(self.in_channels)
+        to_dense = ToDenseMink(input_shape, layer_strides[0],
+                               self.upsample_strides[0], self.out_channels[0])
         ups = [
-            ToDenseMink(input_shape, layer_strides[0], self.upsample_strides[0],
-                        self.out_channels[i])(deblock(x[i]))
-            for i, deblock in enumerate(self.deblocks)
+            to_dense(deblock(x[i])) for i, deblock in enumerate(self.deblocks)
         ]
         if len(ups) > 1:
             out = torch.cat(ups, dim=1)
         else:
             out = ups[0]
         return out
+
 
 # class HeadToDenseMink(nn.Module):
 
@@ -318,7 +319,6 @@ class SparseSECONDFPN(nn.Module):
 #         s = torch.Size([batch_size, self.out_channels, x_in // output_scale, y_in // output_scale])
 #         return x.dense(shape=s,
 #                        min_coordinate=self.min_coord)[0]
-
 
 # class SparseAnchor3DHead(Anchor3DHead):
 
@@ -351,7 +351,7 @@ class SparseSECONDFPN(nn.Module):
 #         self.conv_reg = ME.MinkowskiConvolution(self.feat_channels,
 #                                   self.num_anchors * self.box_code_size, 1, dimension=2, expand_coordinates=True)
 #         self.conv_dir_cls = ME.MinkowskiConvolution(self.feat_channels, self.num_anchors * 2,
-#                                       1, dimension=2, expand_coordinates=True)                                      
+#                                       1, dimension=2, expand_coordinates=True)
 
 #         # self.init_weights()
 

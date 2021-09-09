@@ -232,7 +232,7 @@ def mAP(pred,
         detection[:, :, box_cnts[i]:box_cnts[i + 1]] = det
         false_negatives += false_negative
 
-    mAP = np.empty((len(classes), len(difficulties), 1))
+    mAP = np.zeros((len(classes), len(difficulties), 1))
     for i in range(len(classes)):
         for j in range(len(difficulties)):
             det = detection[i, j, np.argsort(-detection[i, j, :, 0])]

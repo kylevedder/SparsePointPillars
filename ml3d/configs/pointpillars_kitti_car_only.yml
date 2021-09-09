@@ -37,7 +37,7 @@ model:
 
   scatter:
     in_channels: 64
-    output_shape: [496, 432]
+    output_shape: [504, 440]
 
   backbone:
     in_channels: 64

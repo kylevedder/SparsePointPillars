@@ -75,7 +75,7 @@ model:
 
 pipeline:
   name: ObjectDetection
-  test_compute_metric: true
+  test_compute_metric: false
   batch_size: 6
   val_batch_size: 1
   test_batch_size: 1

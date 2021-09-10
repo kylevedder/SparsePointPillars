@@ -5,7 +5,7 @@ dataset:
   steps_per_epoch_train: 5000
 
 model:
-  name: SparsePointPillars
+  name: SparsePointPillarsWide
   ckpt_path: # path/to/your/checkpoint
 
   batcher: "ignore"

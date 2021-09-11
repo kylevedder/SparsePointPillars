@@ -81,7 +81,7 @@ pipeline:
   test_batch_size: 1
   save_ckpt_freq: 2
   validation_freq: 5
-  max_epoch: 200
+  max_epoch: 250
   main_log_dir: ./logs_sparse_5000_2x2_mean_box
   train_sum_dir: train_log_sparse_5000_2x2_mean_box
   grad_clip_norm: 2

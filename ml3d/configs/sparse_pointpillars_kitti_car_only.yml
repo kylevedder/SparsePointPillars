@@ -86,7 +86,7 @@ pipeline:
   save_ckpt_freq: 2
   validation_freq: 5
   max_epoch: 250
-  main_log_dir: ./logs
+  main_log_dir: ./logs_TIMED
   train_sum_dir: train_log
   grad_clip_norm: 2
 

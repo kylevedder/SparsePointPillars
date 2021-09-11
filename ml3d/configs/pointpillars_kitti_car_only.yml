@@ -86,7 +86,7 @@ pipeline:
   save_ckpt_freq: 2
   validation_freq: 5
   max_epoch: 200
-  main_log_dir: ./logs_kitti_dense
+  main_log_dir: ./logs_kitti_dense_TIMED
   train_sum_dir: train_log_kitti_dense
   grad_clip_norm: 2
 

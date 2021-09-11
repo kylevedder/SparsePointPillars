@@ -66,16 +66,25 @@ class NuScenes(BaseDataset):
         self.val_info = {}
 
         if os.path.exists(join(info_path, 'infos_train.pkl')):
+            print("'infos_train.pkl' found")
             self.train_info = pickle.load(
                 open(join(info_path, 'infos_train.pkl'), 'rb'))
+        else:
+            print("'infos_train.pkl' NOT found")
 
         if os.path.exists(join(info_path, 'infos_val.pkl')):
+            print("'infos_val.pkl' found")
             self.val_info = pickle.load(
                 open(join(info_path, 'infos_val.pkl'), 'rb'))
+        else:
+            print("'infos_val.pkl' NOT found")
 
         if os.path.exists(join(info_path, 'infos_test.pkl')):
+            print("'infos_test.pkl' found")
             self.test_info = pickle.load(
                 open(join(info_path, 'infos_test.pkl'), 'rb'))
+        else:
+            print("'infos_test.pkl' NOT found")
 
     @staticmethod
     def get_label_to_names():

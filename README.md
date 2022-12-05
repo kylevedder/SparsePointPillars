@@ -1,6 +1,6 @@
 # Sparse PointPillars
 
-This is the official repo for our implementation of _Sparse PointPillars: Maintaining and Exploiting Input Sparsity to Improve Runtime on Embedded Systems_, submitted to ICRA 2022.
+This is the official repo for our implementation of _Sparse PointPillars: Maintaining and Exploiting Input Sparsity to Improve Runtime on Embedded Systems_, accepted to IROS 2022.
 
 It is based on the [Open3D-ML](https://github.com/isl-org/Open3D-ML) codebase.
 
